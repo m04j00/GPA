@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV 변환기</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+    }
+
+    #noti {
+      background-color: #f9f9f9;
+      /* 연한 회색 배경 */
+      border: 1px solid #ddd;
+      /* 얇은 테두리 */
+      border-radius: 5px;
+      /* 모서리를 둥글게 */
+      padding: 5px;
+      /* 내부 여백 */
+      margin-bottom: 20px;
+      /* 아래쪽 여백 */
+      font-size: 14px;
+      /* 글자 크기 */
+      line-height: 1.6;
+      /* 줄 간격 */
+      color: #333;
+      /* 글자 색상 */
+    }
+
+    #convert-btn {
+      background-color: #007BFF;
+      /* 파란색 배경 */
+      color: #fff;
+      /* 흰색 글자 */
+      border: none;
+      /* 테두리 제거 */
+      border-radius: 5px;
+      /* 모서리를 둥글게 */
+      padding: 10px 20px;
+      /* 내부 여백 */
+      font-size: 16px;
+      /* 글자 크기 */
+      cursor: pointer;
+      /* 마우스 포인터 변경 */
+      transition: background-color 0.3s ease;
+      /* 배경색 전환 효과 */
+    }
+
+    #convert-btn:hover {
+      background-color: #0056b3;
+      /* 호버 시 더 짙은 파란색 */
+    }
+
+    #convert-btn:active {
+      background-color: #003f7f;
+      /* 클릭 시 더 어두운 파란색 */
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSV 변환기</h1>
+  <div id="noti">
+    <h3>사용 예시</h3>
+    <p>학기 과목이름1 과목이름2 이수단위 원점수/과목평균(표준편차) 성취도(수강자수) [석차등급] [학기 과목이름1 과목이름2 이수단위 원점수/과목평균(표준편차) 성취도(수강자수) [석차등급]]</p>
+    <p>공백 맞추기(과목명 주의 / 석차등급 없으면 공백이나 아무숫자)</p>
+    <p>예시</p>
+    <p>
+      1 국어 국어 2 100/88.90(6.4) A(40) 1 // 1학기만 <br>
+      1 수학 수학 3 100/90.50(5.2) A(40) 1 3 100/84.10(7.8) A(38) 1 <br>
+      1 사회 사회 3 100/90.50(5.2) A(40) 3 100/84.10(7.8) A(38) // 석차 없는 경우
+    </p>
+  </div>
+  <textarea id="input" placeholder="여기에 데이터를 입력하세요"></textarea>
+  <br>
+  <button onclick="convertToCSV()" id="convert-btn">변환</button>
+  <h2>결과:</h2>
+  <pre id="output"></pre>
+
+  <script>
+    function parseRow(row) {
+      // 여기에 parseRow 로직을 추가하세요
+      return [row]; // 예시: 단순히 행을 반환
+    }
+
+    function rowsToCSV(rows) {
+      function parseRow(row) {
+        const tokens = row.trim().split(/\s+/);
+        const grade = tokens[0];
+        const subject = (tokens[1] || '') + (tokens[2] || '');
+        const blockRegex = /^(\d+)\/(\d+(?:\.\d+)?)\((\d+(?:\.\d+)?)\)$/;
+
+        // 학기 점수 블록 위치 찾기
+        const blockIndices = tokens.reduce((acc, t, i) => {
+          if (blockRegex.test(t)) acc.push(i);
+          return acc;
+        }, []);
+
+        // 블록을 파싱하는 함수
+        function parseSemester(blockIdx) {
+          const unit = tokens[blockIdx - 1];
+          const match = tokens[blockIdx].match(blockRegex);
+          const rawScore = match[1];
+          const average = match[2];
+          const stdDev = match[3];
+
+          // 석차등급(없으면 빈칸)
+          const rank = (tokens[blockIdx + 2] && /^\d+$/.test(tokens[blockIdx + 2]))
+            ? tokens[blockIdx + 2]
+            : "";
+
+          // 학기는 blockIdx의 상대적 위치로 판별
+          const semester = (blockIdx < blockIndices[1] || blockIndices.length === 1) ? 1 : 2;
+
+          return `${subject},${grade},${semester},${unit},${rank},${rawScore},${average},${stdDev}`;
+        }
+
+        let results = [];
+        for (let i = 0; i < blockIndices.length; i++) {
+          results.push(parseSemester(blockIndices[i]));
+        }
+        return results;
+      }
+
+      const header = "과목,학년,학기,이수단위,석차등급,원점수,과목평균,표준편차";
+      let lines = [header];
+
+      const rowList = Array.isArray(rows) ? rows : rows.trim().split("\n");
+      for (const row of rowList) {
+        if (row.trim() === "") continue;
+        const parsed = parseRow(row);
+        lines.push(...parsed);
+      }
+
+      return lines.join("\n");
+    }
+
+
+    function convertToCSV() {
+      const input = document.getElementById("input").value;
+      const output = rowsToCSV(input);
+      document.getElementById("output").textContent = output;
+    }
+  </script>
+</body>
+
+</html>
