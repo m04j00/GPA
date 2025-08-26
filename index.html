@@ -2,106 +2,264 @@
 <html lang="ko">
 
 <head>
-  <link rel="stylesheet" href="style/gpa.css">
-  <meta charset="UTF-8">
-  <title>내신 성적 산출</title>
+    <link rel="stylesheet" href="style/gpa.css">
+    <meta charset="UTF-8">
+    <title>내신 성적 산출</title>
+    <style>
+        /* 기본 스타일 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #24292e;
+            line-height: 1.5;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            margin: 20px 0;
+            color: #24292e;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        /* 테이블 스타일 */
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(27, 31, 35, 0.12);
+        }
+
+        caption {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #57606a;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #d0d7de;
+        }
+
+        th {
+            background-color: #f6f8fa;
+            color: #24292e;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        td {
+            font-size: 0.9rem;
+            color: #57606a;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f6f8fa;
+        }
+
+        tr:hover {
+            background-color: #eef2f6;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            table {
+                width: 100%;
+            }
+
+            th,
+            td {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        #csvArea {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        /* textarea 스타일 */
+        textarea {
+            width: 90%;
+            margin: 10px auto;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: #24292e;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        /* button 스타일 */
+        button {
+            display: block;
+            margin: 5px auto;
+            padding: 10px 20px;
+            background-color: white;
+            color: #2da44e;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #d0d7de;
+        }
+
+        /* 사용 예시 스타일 */
+        #noti {
+            width: 90%;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        div p:first-child {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #24292e;
+        }
+
+        div p:nth-child(2) {
+            font-size: 0.9rem;
+            color: #57606a;
+            /* 연한 회색 텍스트 */
+            line-height: 1.6;
+        }
+
+        div p:nth-child(3) {
+            font-size: 0.9rem;
+            color: #57606a;
+            /* 연한 회색 텍스트 */
+            line-height: 1.6;
+            font-style: italic;
+            /* 기울임꼴로 강조 */
+        }
+    </style>
 </head>
 
 <body>
-  <h1>내신 성적 산출</h1>
-  <div id="csvArea">
-    <textarea id="csvInput" rows="5" cols="80" placeholder="CSV 데이터를 여기에 붙여넣으세요"></textarea>
-    <p style="cursor: pointer;" onclick="location.href='./toCsv.html'">csv 변환 >></p>
-    <button id="processBtn" onclick="buttonHandler()">산출</button>
-  </div>
+    <h1>내신 성적 산출</h1>
+    <div id="csvArea">
+        <textarea id="csvInput" rows="5" cols="80" placeholder="CSV 데이터를 여기에 붙여넣으세요"></textarea>
+        <p style="cursor: pointer;" onclick="location.href='./convert-csv'">csv 변환 >></p>
+        <button id="processBtn" onclick="buttonHandler()">산출</button>
+    </div>
 
 
-  <div id="tables"></div>
+    <div id="tables"></div>
 
-  <script>
-    Math.erf = Math.erf || function (x) {
-      const sign = x >= 0 ? 1 : -1;
-      x = Math.abs(x);
-      const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
-      const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
-      const t = 1 / (1 + p * x);
-      const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
-      return sign * y;
-    };
+    <script>
+        Math.erf = Math.erf || function (x) {
+            const sign = x >= 0 ? 1 : -1;
+            x = Math.abs(x);
+            const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+            const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+            const t = 1 / (1 + p * x);
+            const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            return sign * y;
+        };
 
-    function normalCDF(z) {
-      return (1.0 + Math.erf(z / Math.sqrt(2))) / 2.0;
-    }
-
-    function zToRank(z) {
-      const percentile = 1 - normalCDF(z);
-      const perc100 = percentile * 100;
-      if (perc100 <= 4) return 1;
-      if (perc100 <= 15) return 2;
-      if (perc100 <= 38) return 3;
-      if (perc100 <= 61) return 4;
-      if (perc100 <= 81) return 5;
-      if (perc100 <= 92) return 6;
-      if (perc100 <= 96) return 7;
-      if (perc100 <= 99) return 8;
-      return 9;
-    }
-
-    function scoreToRank(raw, avg, stddev) {
-      if (isNaN(raw) || isNaN(avg) || isNaN(stddev) || stddev === 0) return null;
-      const z = (raw - avg) / stddev;
-      return zToRank(z);
-    }
-
-    function parseCSV(text) {
-      return text.trim().split("\n").map(line => line.split(","));
-    }
-
-    function renderTables(rows) {
-      const tablesDiv = document.getElementById("tables");
-      tablesDiv.innerHTML = "";
-
-      const grouped = {};
-      rows.forEach(r => {
-        const [subject, gradeYear, semester, credit, rankStr, rawStr, avgStr, stddevStr] = r;
-        const year = parseInt(gradeYear);
-        const sem = parseInt(semester);
-        const creditNum = parseFloat(credit) || 0;
-        let rank = rankStr ? parseInt(rankStr) : null;
-        const raw = parseFloat(rawStr);
-        const avg = parseFloat(avgStr);
-        const stddev = parseFloat(stddevStr);
-
-        if (!rank && !isNaN(raw) && !isNaN(avg) && !isNaN(stddev)) {
-          rank = scoreToRank(raw, avg, stddev);
+        function normalCDF(z) {
+            return (1.0 + Math.erf(z / Math.sqrt(2))) / 2.0;
         }
 
-        const rowObj = { subject, year, sem, credit: creditNum, rank, raw, avg, stddev };
-        if (!grouped[year]) grouped[year] = {};
-        if (!grouped[year][sem]) grouped[year][sem] = [];
-        grouped[year][sem].push(rowObj);
-      });
+        function zToRank(z) {
+            const percentile = 1 - normalCDF(z);
+            const perc100 = percentile * 100;
+            if (perc100 <= 4) return 1;
+            if (perc100 <= 15) return 2;
+            if (perc100 <= 38) return 3;
+            if (perc100 <= 61) return 4;
+            if (perc100 <= 81) return 5;
+            if (perc100 <= 92) return 6;
+            if (perc100 <= 96) return 7;
+            if (perc100 <= 99) return 8;
+            return 9;
+        }
 
-      let totalCredits = 0, totalWeighted = 0;
+        function scoreToRank(raw, avg, stddev) {
+            if (isNaN(raw) || isNaN(avg) || isNaN(stddev) || stddev === 0) return null;
+            const z = (raw - avg) / stddev;
+            return zToRank(z);
+        }
 
-      Object.keys(grouped).sort().forEach(year => {
-        Object.keys(grouped[year]).sort().forEach(sem => {
-          const data = grouped[year][sem];
-          let credits = 0, weighted = 0;
-          const table = document.createElement("table");
-          const caption = document.createElement("caption");
-          caption.innerText = `${year}학년 ${sem}학기`;
-          table.appendChild(caption);
+        function parseCSV(text) {
+            return text.trim().split("\n").map(line => line.split(","));
+        }
 
-          table.innerHTML += `
+        function renderTables(rows) {
+            const tablesDiv = document.getElementById("tables");
+            tablesDiv.innerHTML = "";
+
+            const grouped = {};
+            rows.forEach(r => {
+                const [subject, gradeYear, semester, credit, rankStr, rawStr, avgStr, stddevStr] = r;
+                const year = parseInt(gradeYear);
+                const sem = parseInt(semester);
+                const creditNum = parseFloat(credit) || 0;
+                let rank = rankStr ? parseInt(rankStr) : null;
+                const raw = parseFloat(rawStr);
+                const avg = parseFloat(avgStr);
+                const stddev = parseFloat(stddevStr);
+
+                if (!rank && !isNaN(raw) && !isNaN(avg) && !isNaN(stddev)) {
+                    rank = scoreToRank(raw, avg, stddev);
+                }
+
+                const rowObj = { subject, year, sem, credit: creditNum, rank, raw, avg, stddev };
+                if (!grouped[year]) grouped[year] = {};
+                if (!grouped[year][sem]) grouped[year][sem] = [];
+                grouped[year][sem].push(rowObj);
+            });
+
+            let totalCredits = 0, totalWeighted = 0;
+
+            Object.keys(grouped).sort().forEach(year => {
+                Object.keys(grouped[year]).sort().forEach(sem => {
+                    const data = grouped[year][sem];
+                    let credits = 0, weighted = 0;
+                    const table = document.createElement("table");
+                    const caption = document.createElement("caption");
+                    caption.innerText = `${year}학년 ${sem}학기`;
+                    table.appendChild(caption);
+
+                    table.innerHTML += `
         <tr>
           <th>과목</th><th>이수단위</th><th>석차등급</th>
           <th>원점수</th><th>과목평균</th><th>표준편차</th>
         </tr>
       `;
-          data.forEach(d => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
+                    data.forEach(d => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
           <td>${d.subject}</td>
           <td>${d.credit}</td>
           <td>${d.rank ?? "-"}</td>
@@ -109,55 +267,56 @@
           <td>${isNaN(d.avg) ? "-" : d.avg}</td>
           <td>${isNaN(d.stddev) ? "-" : d.stddev}</td>
         `;
-            table.appendChild(tr);
-            if (d.rank) {
-              credits += d.credit;
-              weighted += d.rank * d.credit;
-            }
-          });
-          const avgRank = (credits > 0) ? (weighted / credits).toFixed(2) : "-";
-          const summary = document.createElement("tr");
-          summary.innerHTML = `
+                        table.appendChild(tr);
+                        if (d.rank) {
+                            credits += d.credit;
+                            weighted += d.rank * d.credit;
+                        }
+                    });
+                    const avgRank = (credits > 0) ? (weighted / credits).toFixed(2) : "-";
+                    const summary = document.createElement("tr");
+                    summary.innerHTML = `
         <td colspan="2">합계</td>
         <td colspan="4">이수단위:${credits}, 평균등급:${avgRank}</td>
       `;
-          table.appendChild(summary);
+                    table.appendChild(summary);
 
-          totalCredits += credits;
-          totalWeighted += weighted;
+                    totalCredits += credits;
+                    totalWeighted += weighted;
 
-          tablesDiv.appendChild(table);
-        });
-      });
+                    tablesDiv.appendChild(table);
+                });
+            });
 
-      const totalAvg = totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : "-";
-      const overall = document.createElement("h2");
-      overall.innerText = `전체 합계: 이수단위 ${totalCredits}, 평균등급 ${totalAvg}`;
-      tablesDiv.appendChild(overall);
-    }
+            const totalAvg = totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : "-";
+            const overall = document.createElement("h2");
+            overall.innerText = `전체 합계: 이수단위 ${totalCredits}, 평균등급 ${totalAvg}`;
+            tablesDiv.appendChild(overall);
+        }
 
-    function init() {
-      fetch('grades.csv').then(r => r.text()).then(t => {
-        const rows = parseCSV(t);
-        renderTables(rows.slice(1));
-      });
-    }
-    // init();
+        function init() {
+            fetch('grades.csv').then(r => r.text()).then(t => {
+                const rows = parseCSV(t);
+                renderTables(rows.slice(1));
+            });
+        }
+        // init();
 
-    function buttonHandler() {
-      const input = document.getElementById("csvInput").value;
-      if (!input.trim()) {
-        alert("CSV 데이터를 입력하세요.");
-        return;
-      }
-      const rows = parseCSV(input);
+        function buttonHandler() {
+            const input = document.getElementById("csvInput").value;
+            if (!input.trim()) {
+                alert("CSV 데이터를 입력하세요.");
+                return;
+            }
+            const rows = parseCSV(input);
 
-      if (rows[0].join(",") === "과목,학년,학기,이수단위,석차등급,원점수,과목평균,표준편차") {
-        renderTables(rows.slice(1));
-      } else {
-        renderTables(rows);
-      }
-    }
-  </script>
+            if (rows[0].join(",") === "과목,학년,학기,이수단위,석차등급,원점수,과목평균,표준편차") {
+                renderTables(rows.slice(1));
+            } else {
+                renderTables(rows);
+            }
+        }
+    </script>
 </body>
+
 </html>
